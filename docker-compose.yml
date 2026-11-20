@@ -24,7 +24,7 @@ services:
     depends_on: &after_migrate
       migrate:
         condition: service_completed_successfully
-    command: ["/app/docker/entrypoint-web.sh"]
+    command: ["sh", "/app/docker/entrypoint-web.sh"]
     ports:
       - "8000:8000"
 
