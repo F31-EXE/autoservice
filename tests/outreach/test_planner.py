@@ -293,3 +293,12 @@ class TestDailyRun:
     def test_local_today_uses_station_timezone(self, station):
         station.timezone = "Asia/Vladivostok"
         assert station.local_now().utcoffset() == timedelta(hours=10)
+
+
+def test_control_outreach_is_not_cancelled_when_work_done():
+    station = ServiceStationFactory(settings={"control_group_share": 1})
+    r = rec_for(vehicle_for(station), due_date=TODAY)
+    queue(station)
+    Rec.objects.filter(pk=r.pk).update(status="done")
+    assert queue(station)["obsolete_cancelled"] == 0
+    assert Outreach.objects.get().status == "planned"

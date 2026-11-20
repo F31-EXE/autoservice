@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.llm",
     "apps.outreach",
     "apps.messaging",
+    "apps.reports",
 ]
 
 MIDDLEWARE = [

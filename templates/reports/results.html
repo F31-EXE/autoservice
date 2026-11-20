@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load humanize_ru %}
+{% block title %}Результаты{% endblock %}
+{% block content %}
+<h2>Результаты</h2>
+<form method="get" class="filters">
+  <select name="station" aria-label="Точка">
+    <option value="all">Все точки</option>
+    {% for s in stations %}<option value="{{ s.pk }}" {% if choice == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+  <label class="inline">с <input type="date" name="from" value="{{ report.date_from|date:'Y-m-d' }}"></label>
+  <label class="inline">по <input type="date" name="to" value="{{ report.date_to|date:'Y-m-d' }}"></label>
+  <button type="submit">Показать</button>
+  <a href="{% url 'reports:results_csv' %}?{{ query }}" role="button" class="secondary outline">Скачать CSV</a>
+</form>
+<p class="muted">Напоминания с датой отправки с {{ report.date_from|date:"d.m.Y" }} по {{ report.date_to|date:"d.m.Y" }}. Визит засчитывается, если машина приехала в течение окна атрибуции после первого сообщения.</p>
+
+<section>
+  <h3>Воронка</h3>
+  <div class="funnel">
+    {% for label, value in report.funnel.steps %}
+    <article><small>{{ label }}</small><strong>{{ value|money }}</strong></article>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h3>Сравнение с контрольной группой</h3>
+  {% with c=report.comparison %}
+  <div class="overflow-auto">
+  <table>
+    <thead><tr><th></th><th>Напоминаний</th><th>Приехали</th><th>Доля приехавших</th></tr></thead>
+    <tbody>
+      <tr><td>Рассылка</td><td>{{ c.sent }}</td><td>{{ c.sent_visited }}</td><td>{{ c.sent_rate|percent }}</td></tr>
+      <tr><td>Контрольная группа (не писали)</td><td>{{ c.control }}</td><td>{{ c.control_visited }}</td><td>{{ c.control_rate|percent }}</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="funnel">
+    <article><small>Разница</small><strong>{{ c.uplift_pp|pp }}</strong>{% if c.ci95_pp %}<small class="muted">95% интервал: {{ c.ci95_pp.0|pp }} … {{ c.ci95_pp.1|pp }}</small>{% endif %}</article>
+    <article><small>Средний чек приехавших</small><strong>{{ c.avg_check|money }} ₽</strong></article>
+    <article><small>Дополнительная выручка (оценка)</small><strong>{{ c.extra_revenue|money }} ₽</strong></article>
+  </div>
+  {% if not c.control %}
+    <p class="note">В контрольной группе за период никого нет — эффект оценить нельзя.</p>
+  {% elif not c.enough_data %}
+    <p class="note">Мало данных (меньше {{ 30 }} в одной из групп) — цифры предварительные.</p>
+  {% elif not c.significant %}
+    <p class="note">Разница пока статистически не значима: интервал включает ноль.</p>
+  {% endif %}
+  {% if c.open_windows %}<p class="note">У {{ c.open_windows }} напоминаний окно атрибуции ещё не закрыто — доли и выручка могут вырасти.</p>{% endif %}
+  {% endwith %}
+</section>
+
+<section>
+  <h3>Деньги на столе</h3>
+  <p class="muted">Открытые рекомендации сейчас: {{ report.money_count }} на {{ report.money_total|money }} ₽ (по оценкам, где они есть).</p>
+  <div class="overflow-auto">
+  <table>
+    <thead><tr><th>Работа</th><th>Рекомендаций</th><th>С оценкой</th><th>Сумма, ₽</th></tr></thead>
+    <tbody>
+    {% for row in report.money %}
+      <tr><td>{{ row.title }}</td><td>{{ row.count }}</td><td>{{ row.priced }}</td><td>{{ row.amount|money }}</td></tr>
+    {% empty %}
+      <tr><td colspan="4" class="muted">Открытых рекомендаций нет.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

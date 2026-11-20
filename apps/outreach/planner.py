@@ -103,10 +103,16 @@ def release_recommendations(outreach: Outreach) -> None:
 
 
 def cancel_obsolete(station: ServiceStation) -> int:
-    """Cancel not-yet-sent reminders whose recommendations were all closed meanwhile."""
+    """Cancel not-yet-sent reminders whose recommendations were all closed meanwhile.
+
+    Control-group reminders are never cancelled: they are an observation, and a visit that
+    closed their recommendations is exactly what attribution must count (otherwise the
+    control group would lose its visits and the uplift would be overstated).
+    """
     cancelled = 0
     pending = Outreach.objects.filter(
         station=station,
+        is_control_group=False,
         status__in=(Outreach.Status.PLANNED, Outreach.Status.AWAITING_APPROVAL,
                     Outreach.Status.APPROVED),
     ).prefetch_related("recommendations")  # fmt: skip

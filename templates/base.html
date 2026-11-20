@@ -18,6 +18,7 @@
         <li><a href="{% url 'workorders:import_list' %}">Загрузки</a></li>
         <li><a href="{% url 'recommendations:list' %}">Рекомендации</a></li>
         <li><a href="{% url 'messaging:dialogs' %}">Диалоги</a></li>
+        {% if user.is_owner or user.is_superadmin %}<li><a href="{% url 'reports:results' %}">Результаты</a></li>{% endif %}
         <li><a href="{% url 'accounts:station_list' %}">Точки</a></li>
         {% if user.is_superadmin %}<li><a href="{% url 'admin:index' %}">Админка</a></li>{% endif %}
       </ul>

@@ -56,3 +56,10 @@ p.error { color: #c62828; }
 .error { color: #c62828; }
 form > .actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 form > .actions button { width: auto; margin: 0; }
+.funnel { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.funnel article { margin: 0; padding: .75rem; display: flex; flex-direction: column; gap: .25rem; }
+.funnel strong { font-size: 1.4em; }
+.filters label.inline { display: flex; align-items: center; gap: .4rem; margin: 0; }
+.filters input[type=date] { margin: 0; width: auto; }
+.filters [role=button] { width: auto; margin: 0; }
+.note { background: #fff8e1; color: #5d4300; padding: .5rem .75rem; border-radius: .5rem; }

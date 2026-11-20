@@ -9,6 +9,7 @@ urlpatterns = [
     path("recommendations/", include("apps.recommendations.urls")),
     path("outreach/", include("apps.outreach.urls")),
     path("messaging/", include("apps.messaging.urls")),
+    path("results/", include("apps.reports.urls")),
     path("", include("apps.accounts.urls")),
 ]
 
