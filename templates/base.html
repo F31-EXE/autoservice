@@ -3,52 +3,94 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>{% block title %}Vozvrat{% endblock %} · Vozvrat</title>
+  <script>
+    /* apply the saved theme before the first paint (no flash of the wrong theme) */
+    (function () {
+      try {
+        var t = localStorage.getItem("vozvrat-theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="{% static 'img/logo.svg' %}" type="image/svg+xml">
+  <link rel="preload" href="{% static 'vendor/fonts/inter-cyrillic-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'vendor/pico-2.0.6.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <script src="{% static 'vendor/htmx-2.0.4.min.js' %}" defer></script>
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  {% if user.is_authenticated %}
-  <header class="container">
-    <nav>
-      <ul><li><a href="{% url 'accounts:today' %}"><strong>Vozvrat</strong></a></li></ul>
-      <ul class="main-nav">
-        <li><a href="{% url 'accounts:today' %}">Сегодня</a></li>
-        <li><a href="{% url 'workorders:import_list' %}">Загрузки</a></li>
-        <li><a href="{% url 'recommendations:list' %}">Рекомендации</a></li>
-        <li><a href="{% url 'customers:list' %}">Клиенты</a></li>
-        <li><a href="{% url 'messaging:dialogs' %}">Диалоги</a></li>
-        {% if user.is_owner or user.is_superadmin %}<li><a href="{% url 'reports:results' %}">Результаты</a></li>{% endif %}
-        {% if user.is_owner or user.is_superadmin %}<li><a href="{% url 'accounts:settings' %}">Настройки</a></li>{% else %}<li><a href="{% url 'accounts:station_list' %}">Точки</a></li>{% endif %}
-        {% if user.is_superadmin %}<li><a href="{% url 'admin:index' %}">Админка</a></li>{% endif %}
-      </ul>
-      <ul>
-        {% if user_stations|length > 1 %}
-        <li>
-          <form method="post" action="{% url 'accounts:switch_station' %}" class="station-switch">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <select name="station_id" onchange="this.form.submit()" aria-label="Точка">
-              {% for s in user_stations %}
-              <option value="{{ s.pk }}" {% if current_station and s.pk == current_station.pk %}selected{% endif %}>{{ s.name }}</option>
-              {% endfor %}
-            </select>
-          </form>
-        </li>
-        {% elif current_station %}<li>{{ current_station.name }}</li>{% endif %}
-        <li>
-          <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
-            <button type="submit" class="secondary outline">Выйти</button>
-          </form>
-        </li>
-      </ul>
-    </nav>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="{% if user.is_authenticated %}app{% else %}guest{% endif %}">
+{% include "_icons.html" %}
+{% if user.is_authenticated %}
+{% with ns=request.resolver_match.namespace url=request.resolver_match.url_name %}
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+<aside class="sidebar" aria-label="Навигация">
+  <a class="brand" href="{% url 'accounts:today' %}">
+    <img src="{% static 'img/logo.svg' %}" alt="" width="32" height="32"><span>Vozvrat</span>
+  </a>
+  <label for="nav-toggle" class="nav-close" aria-label="Закрыть меню">{% include "_icon.html" with name="x" %}</label>
+  <nav class="side-nav">
+    <a href="{% url 'accounts:today' %}" {% if url == "today" or ns == "outreach" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="calendar-check" %}Сегодня</a>
+    <a href="{% url 'workorders:import_list' %}" {% if ns == "workorders" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="upload" %}Загрузки</a>
+    <a href="{% url 'recommendations:list' %}" {% if ns == "recommendations" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="list-checks" %}Рекомендации</a>
+    <a href="{% url 'customers:list' %}" {% if ns == "customers" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="users" %}Клиенты</a>
+    <a href="{% url 'messaging:dialogs' %}" {% if ns == "messaging" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="message-circle" %}Диалоги</a>
+    {% if user.is_owner or user.is_superadmin %}
+    <a href="{% url 'reports:results' %}" {% if ns == "reports" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="chart-column" %}Результаты</a>
+    <a href="{% url 'accounts:settings' %}" {% if url == "settings" or url == "user_create" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="settings" %}Настройки</a>
+    {% else %}
+    <a href="{% url 'accounts:station_list' %}" {% if url == "station_list" or url == "station_detail" %}aria-current="page"{% endif %}>{% include "_icon.html" with name="store" %}Точки</a>
+    {% endif %}
+    {% if user.is_superadmin %}<a href="{% url 'admin:index' %}">{% include "_icon.html" with name="sparkles" %}Админка</a>{% endif %}
+  </nav>
+  <div class="side-footer">
+    {% if user_stations|length > 1 %}
+    <form method="post" action="{% url 'accounts:switch_station' %}" class="station-switch">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <label>
+        <small>Точка</small>
+        <select name="station_id" onchange="this.form.submit()">
+          {% for s in user_stations %}<option value="{{ s.pk }}" {% if current_station and s.pk == current_station.pk %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+      </label>
+    </form>
+    {% elif current_station %}
+    <div class="station-name">{% include "_icon.html" with name="store" %}<span>{{ current_station.name }}</span></div>
+    {% endif %}
+    <div class="side-row">
+      <button type="button" class="theme-toggle" data-theme-toggle title="Тема оформления">
+        <span class="theme-icon theme-auto">{% include "_icon.html" with name="monitor" %}</span>
+        <span class="theme-icon theme-light">{% include "_icon.html" with name="sun" %}</span>
+        <span class="theme-icon theme-dark">{% include "_icon.html" with name="moon" %}</span>
+        <span class="theme-label">Авто</span>
+      </button>
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+        <button type="submit" class="icon-button" title="Выйти ({{ user.get_username }})" aria-label="Выйти">{% include "_icon.html" with name="log-out" %}</button>
+      </form>
+    </div>
+  </div>
+</aside>
+<label for="nav-toggle" class="nav-backdrop" aria-hidden="true"></label>
+<div class="shell">
+  <header class="topbar">
+    <label for="nav-toggle" class="icon-button" aria-label="Меню">{% include "_icon.html" with name="menu" %}</label>
+    <a class="brand" href="{% url 'accounts:today' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="28" height="28"><span>Vozvrat</span></a>
+    {% if current_station %}<span class="topbar-station">{{ current_station.name }}</span>{% endif %}
   </header>
-  {% endif %}
-  <main class="container">
-    {% for message in messages %}<article class="flash flash-{{ message.tags }}">{{ message }}</article>{% endfor %}
+  <main class="content">
+    {% for message in messages %}<div class="flash flash-{{ message.tags }}" role="status">{% if message.tags == "error" %}{% include "_icon.html" with name="circle-alert" %}{% else %}{% include "_icon.html" with name="check" %}{% endif %}<span>{{ message }}</span></div>{% endfor %}
     {% block content %}{% endblock %}
   </main>
+</div>
+{% endwith %}
+{% else %}
+<main class="guest-main">
+  {% for message in messages %}<div class="flash flash-{{ message.tags }}">{{ message }}</div>{% endfor %}
+  {% block guest %}{% endblock %}
+</main>
+{% endif %}
+<script src="{% static 'js/theme.js' %}" defer></script>
 </body>
 </html>

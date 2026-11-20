@@ -5,7 +5,7 @@
   <h2>Сегодня{% if station %} · {{ station.name }}{% endif %}</h2>
   {% if station %}
   <form method="post" action="{% url 'outreach:rebuild' %}">{% csrf_token %}
-    <button type="submit" class="secondary outline">Обновить очередь</button>
+    <button type="submit" class="secondary outline">{% include "_icon.html" with name="refresh-cw" %} Обновить очередь</button>
   </form>
   {% endif %}
 </div>
@@ -21,7 +21,7 @@
     <label><input type="checkbox" onclick="document.querySelectorAll('input[name=ids]').forEach(c => c.checked = this.checked)"> Выбрать все</label>
     <button type="submit" form="bulk-form">Отправить выбранные</button>
   </div>
-  {% for row in rows %}{% include "outreach/_row.html" with o=row.o text=row.text %}{% endfor %}
+  {% for row in rows %}{% include "outreach/_row.html" with o=row.o text=row.text channel=row.channel segments=row.segments too_long=row.too_long %}{% endfor %}
   {% include "_pagination.html" %}
   {% else %}
   <p class="muted">Нет напоминаний к подтверждению. Очередь формируется каждый день в 07:00 по времени точки; после загрузки новой выгрузки можно нажать «Обновить очередь».</p>

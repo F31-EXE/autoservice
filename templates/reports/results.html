@@ -19,7 +19,7 @@
   <h3>Воронка</h3>
   <div class="funnel">
     {% for label, value in report.funnel.steps %}
-    <article><small>{{ label }}</small><strong>{{ value|money }}</strong></article>
+    <article{% if forloop.last %} class="highlight"{% endif %}><small>{{ label }}</small><strong>{{ value|money }}</strong></article>
     {% endfor %}
   </div>
 </section>
@@ -37,9 +37,9 @@
   </table>
   </div>
   <div class="funnel">
-    <article><small>Разница</small><strong>{{ c.uplift_pp|pp }}</strong>{% if c.ci95_pp %}<small class="muted">95% интервал: {{ c.ci95_pp.0|pp }} … {{ c.ci95_pp.1|pp }}</small>{% endif %}</article>
+    <article class="{% if c.uplift_pp > 0 %}positive{% elif c.uplift_pp < 0 %}negative{% endif %}"><small>Разница</small><strong>{{ c.uplift_pp|pp }}</strong>{% if c.ci95_pp %}<small class="muted">95% интервал: {{ c.ci95_pp.0|pp }} … {{ c.ci95_pp.1|pp }}</small>{% endif %}</article>
     <article><small>Средний чек приехавших</small><strong>{{ c.avg_check|money }} ₽</strong></article>
-    <article><small>Дополнительная выручка (оценка)</small><strong>{{ c.extra_revenue|money }} ₽</strong></article>
+    <article class="{% if c.extra_revenue > 0 %}positive{% elif c.extra_revenue < 0 %}negative{% endif %}"><small>Дополнительная выручка (оценка)</small><strong>{{ c.extra_revenue|money }} ₽</strong></article>
   </div>
   {% if not c.control %}
     <p class="note">В контрольной группе за период никого нет — эффект оценить нельзя.</p>

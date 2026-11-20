@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -125,7 +126,8 @@ def test_today_page(client, manager_a, station_a):
     assert resp.status_code == 200
     assert len(resp.context["rows"]) == 1
     assert "«колодки пер. 30%»" in html
-    assert "СТОП — отписка" in html and "сегм." in html
+    assert "СТОП — отписка" in html
+    assert re.search(r"Текст SMS · \d+ симв\., [12] сегм\.", html)  # real numbers, not blanks
     phone = resp.context["rows"][0]["o"].client.phone
     assert phone not in html and f"{phone[:4]}***{phone[-2:]}" in html  # masked phone only
 
