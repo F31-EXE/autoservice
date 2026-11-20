@@ -122,7 +122,15 @@ def get_client() -> LLMClient:
     if _override is not None:
         return _override
     if settings.LLM_BACKEND == "fake":
+        from apps.messaging.intent import INTENT_MARKER, heuristic_responder
         from apps.recommendations.llm_mock import HeuristicResponder
 
-        return FakeLLMClient(HeuristicResponder())
+        extraction = HeuristicResponder()
+
+        def route(messages: list[dict]) -> str:
+            if INTENT_MARKER in messages[-1]["content"]:
+                return heuristic_responder(messages)
+            return extraction(messages)
+
+        return FakeLLMClient(route)
     return OpenAICompatibleClient()

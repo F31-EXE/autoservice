@@ -27,7 +27,29 @@
   <p class="muted">Нет напоминаний к подтверждению. Очередь формируется каждый день в 07:00 по времени точки; после загрузки новой выгрузки можно нажать «Обновить очередь».</p>
   {% endif %}
 </section>
-<section><h3>Новые заявки</h3><p class="muted">Нет новых заявок.</p></section>
-<section><h3>Ответы клиентов</h3><p class="muted">Нет непрочитанных ответов.</p></section>
+<section>
+  <h3>Новые заявки <span class="muted">({{ bookings|length }})</span></h3>
+  {% for b in bookings %}{% include "messaging/_booking.html" %}{% empty %}<p class="muted">Нет новых заявок.</p>{% endfor %}
+</section>
+<section>
+  <h3>Ответы клиентов <span class="muted">({{ attention_count }})</span></h3>
+  {% for m in attention %}
+    <p><a href="{% url 'messaging:conversation' m.client_id %}">{{ m.client.full_name|default:"Клиент" }}</a>: «{{ m.text|truncatechars:120 }}» <small class="muted">{{ m.created_at|date:"d.m H:i" }}</small></p>
+  {% empty %}<p class="muted">Нет ответов, требующих внимания.</p>{% endfor %}
+  {% if attention_count > attention|length %}<p><a href="{% url 'messaging:dialogs' %}">Все диалоги →</a></p>{% endif %}
+</section>
+<section>
+  <h3>Звонки <span class="muted">({{ calls|length }})</span></h3>
+  {% for o in calls %}
+  <article class="booking">
+    <strong>{{ o.client.full_name|default:"Клиент" }}</strong> <span class="muted">· {{ o.client.phone|default:"" }} · {{ o.vehicle.make_model }} · оценка {{ o.est_amount|floatformat:0 }} ₽</span>
+    <form method="post" action="{% url 'messaging:call_outcome' o.pk %}" class="actions">{% csrf_token %}
+      <button name="outcome" value="booked">Записан</button>
+      <button name="outcome" value="no_answer" class="secondary">Не дозвонились</button>
+      <button name="outcome" value="declined" class="contrast outline">Отказался</button>
+    </form>
+  </article>
+  {% empty %}<p class="muted">Нет звонков.</p>{% endfor %}
+</section>
 {% endif %}
 {% endblock %}

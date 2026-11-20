@@ -1,0 +1,12 @@
+<article class="booking" id="booking-{{ b.pk }}">
+  <strong>{{ b.client.full_name|default:"Клиент" }}</strong>
+  <span class="muted"> · {{ b.created_at|date:"d.m H:i" }}{% if b.preferred_time_text %} · хочет: «{{ b.preferred_time_text }}»{% endif %} · {{ b.get_status_display }}</span>
+  {% if b.status == "new" or b.status == "contacted" %}
+  <div class="actions">
+    <a href="{% url 'messaging:conversation' b.client_id %}" role="button" class="secondary outline">Переписка</a>
+    {% if b.status == "new" %}<button hx-post="{% url 'messaging:booking_action' b.pk %}" hx-vals='{"status": "contacted"}' hx-target="#booking-{{ b.pk }}" hx-swap="outerHTML" class="secondary">Связался</button>{% endif %}
+    <button hx-post="{% url 'messaging:booking_action' b.pk %}" hx-vals='{"status": "booked"}' hx-target="#booking-{{ b.pk }}" hx-swap="outerHTML">Записан</button>
+    <button hx-post="{% url 'messaging:booking_action' b.pk %}" hx-vals='{"status": "cancelled"}' hx-target="#booking-{{ b.pk }}" hx-swap="outerHTML" class="contrast outline">Отменить</button>
+  </div>
+  {% endif %}
+</article>

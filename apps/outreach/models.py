@@ -32,7 +32,7 @@ class Outreach(TimeStampedModel):
 
     class Channel(models.TextChoices):
         SMS = "sms", "SMS"
-        TELEGRAM = "telegram", "Telegram"
+        MAX = "max", "MAX"
         MANUAL_CALL = "manual_call", "Звонок"
 
     ACTIVE_STATUSES = (

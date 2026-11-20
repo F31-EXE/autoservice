@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Переписка{% endblock %}
+{% block content %}
+<h2>{{ client.full_name|default:"Клиент без имени" }}</h2>
+<p class="muted">{% if client.max_user_id %}MAX подключён{% endif %}{% if client.max_user_id and client.phone %} · {% endif %}{% if client.phone %}SMS {{ client.masked_phone }}{% endif %}{% if client.unsubscribed_at %} · <strong>отписан {{ client.unsubscribed_at|date:"d.m.Y" }}</strong>{% endif %}</p>
+<div class="chat">
+  {% for m in history %}
+  <div class="bubble {{ m.direction }}{% if m.needs_attention %} attention{% endif %}">
+    <small class="muted">{{ m.created_at|date:"d.m.Y H:i" }} · {{ m.get_channel_display }}{% if m.touch_number %} · напоминание №{{ m.touch_number }}{% endif %}{% if m.intent %} · {{ m.get_intent_display }}{% if m.handled_by_ai %} (обработано автоматически){% endif %}{% endif %}{% if m.status == "failed" %} · <span class="error">не доставлено</span>{% endif %}</small>
+    <div>{{ m.text|linebreaksbr }}</div>
+  </div>
+  {% empty %}
+  <p class="muted">Сообщений нет.</p>
+  {% endfor %}
+</div>
+{% if not client.unsubscribed_at %}
+<form method="post">
+  {% csrf_token %}
+  <textarea name="text" rows="3" placeholder="Ответ клиенту"></textarea>
+  <div class="actions">
+    <button type="submit" name="action" value="reply">Отправить ответ</button>
+    <button type="submit" name="action" value="handled" class="secondary outline">Отметить обработанным</button>
+  </div>
+</form>
+{% endif %}
+<p><a href="{% url 'messaging:dialogs' %}">← Все диалоги</a></p>
+{% endblock %}

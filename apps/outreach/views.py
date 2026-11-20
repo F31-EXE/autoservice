@@ -18,7 +18,7 @@ from apps.recommendations.models import Recommendation
 from .forms import SkipForm, TextForm
 from .models import Outreach
 from .planner import build_queue, cancel_obsolete, release_recommendations
-from .texts import call_script, compose_text
+from .texts import call_script, compose_text, default_channel, sms_segments
 
 
 def _queue(request, station):
@@ -33,7 +33,19 @@ def _queue(request, station):
 
 
 def _row_context(outreach: Outreach, **extra) -> dict:
-    return {"o": outreach, "text": compose_text(outreach), **extra}
+    from django.conf import settings
+
+    channel = default_channel(outreach.client) or "sms"
+    text = compose_text(outreach, channel)
+    segments = sms_segments(text)[0] if channel == "sms" else None
+    return {
+        "o": outreach,
+        "text": text,
+        "channel": channel,
+        "segments": segments,
+        "too_long": bool(segments and segments > int(settings.SMS_MAX_SEGMENTS)),
+        **extra,
+    }
 
 
 @login_required
@@ -57,8 +69,35 @@ def today(request: HttpRequest) -> HttpResponse:
             "control_today": todays.filter(is_control_group=True).count(),
             "approved_today": todays.filter(status=Outreach.Status.APPROVED).count(),
             "skipped_today": todays.filter(status=Outreach.Status.SKIPPED).count(),
+            **_inbox(request, station),
         },
     )
+
+
+def _inbox(request, station) -> dict:
+    from apps.messaging.models import BookingRequest, Message
+
+    attention = (
+        Message.objects.for_user(request.user)
+        .filter(client__station=station, needs_attention=True)
+        .select_related("client")
+        .order_by("-created_at")
+    )
+    return {
+        "bookings": list(
+            BookingRequest.objects.for_user(request.user)
+            .filter(client__station=station, status__in=["new", "contacted"])
+            .select_related("client")[:50]
+        ),
+        "attention": list(attention[:10]),
+        "attention_count": attention.count(),
+        "calls": list(
+            Outreach.objects.for_user(request.user)
+            .for_station(station)
+            .filter(status=Outreach.Status.APPROVED, channel=Outreach.Channel.MANUAL_CALL)
+            .select_related("client", "vehicle")
+        ),
+    }
 
 
 def _get_pending(request, pk) -> Outreach:
@@ -80,10 +119,16 @@ def _approve(request, outreach: Outreach, channel: str) -> None:
     outreach.approved_at = timezone.now()
     outreach.save(update_fields=["status", "channel", "approved_by", "approved_at", "updated_at"])
     audit(request.user, "outreach.approve", outreach, station=outreach.station, channel=channel)
+    if channel != Outreach.Channel.MANUAL_CALL:
+        from apps.messaging.tasks import send_touch_task
+
+        outreach_id = outreach.pk
+        # sends now if inside the send window; otherwise the periodic dispatcher does it later
+        transaction.on_commit(lambda: send_touch_task.delay(outreach_id))
 
 
 def _default_channel(outreach: Outreach) -> str:
-    return Outreach.Channel.TELEGRAM if outreach.client.telegram_chat_id else Outreach.Channel.SMS
+    return default_channel(outreach.client) or Outreach.Channel.SMS
 
 
 @login_required

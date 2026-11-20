@@ -16,8 +16,9 @@ DEFAULT_STATION_SETTINGS: dict[str, Any] = {
     "llm_compose_enabled": False,
     # after a skipped / cancelled / unanswered reminder, don't queue the vehicle again for N days
     "skip_cooldown_days": 30,
-    # message template (Django template syntax); empty = built-in default from spec 8.3
-    "message_template": "",
+    # message templates (Django template syntax); empty = built-in defaults
+    "message_template": "",  # MAX (messenger)
+    "sms_template": "",  # SMS, must stay short
     # LLM extraction skips work orders older than this (None = recommendation_ttl_days)
     "llm_extract_max_age_days": None,
 }

@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from apps.common.models import AuditEvent
 from apps.outreach.models import Outreach
-from apps.outreach.texts import compose_text, recommendation_summary
+from apps.outreach.texts import compose_text, recommendation_summary, sms_segments
 from apps.recommendations.models import Recommendation as Rec
 from tests.factories import ClientFactory, VehicleFactory, WorkOrderFactory
 
@@ -31,26 +31,73 @@ def make_outreach(
     return o
 
 
-def test_text_template(station_a):
+def test_text_templates(station_a, settings):
+    settings.MAX_BOT_USERNAME = ""  # no bot: the SMS links to the booking page
     station_a.sender_name = "СТО «Мотор»"
     station_a.booking_url = "https://example.com/book"
     station_a.save()
     o = make_outreach(station_a)
-    text = compose_text(o)
-    assert text == (
+    sms = compose_text(o, "sms")
+    assert sms == (
+        "Иван, СТО «Мотор»: по Lada Vesta пора — замена передних колодок. "
+        "Запись: https://example.com/book. СТОП — отписка"
+    )
+    assert sms_segments(sms) == (2, "ucs2")
+    assert compose_text(o, "max") == (
         "Иван, это СТО «Мотор». В марте мастер отметил: замена передних колодок на вашем "
-        "Lada Vesta. По пробегу пора проверить. Записаться: https://example.com/book. "
-        "Отписаться: СТОП"
+        "Lada Vesta. По пробегу пора проверить. Нажмите «Записаться» — администратор свяжется "
+        "с вами и подберёт время. Отписаться: СТОП"
     )
     o.custom_text = "Свой текст"
-    assert compose_text(o) == "Свой текст"
+    assert compose_text(o, "sms") == compose_text(o, "max") == "Свой текст"
+
+
+def test_sms_link_to_max_bot(station_a, settings):
+    from apps.messaging.models import MaxLink
+
+    o = make_outreach(station_a)
+    sms = compose_text(o, "sms")
+    link = MaxLink.objects.get(client=o.client)
+    assert f"https://max.ru/vozvrat_test_bot?start={link.token}" in sms
+    assert sms_segments(sms)[0] <= 2
+    compose_text(o, "sms")
+    assert MaxLink.objects.count() == 1  # the unused link is reused
+
+
+def test_long_sms_is_shortened(station_a):
+    o = make_outreach(station_a)
+    o.vehicle.make, o.vehicle.model = "Mercedes-Benz", "GLE Coupe 450 4MATIC"
+    o.vehicle.save()
+    for i in range(4):
+        rec = o.recommendations.first()
+        rec.pk = None
+        rec.work_type_raw = f"Замена очень длинного узла номер {i} в сборе"
+        rec.save()
+        o.recommendations.add(rec)
+    sms = compose_text(o, "sms")
+    assert sms_segments(sms)[0] <= 2, sms
+    assert "СТОП — отписка" in sms
+    # with a short sender name the list survives in the "и ещё N работ" form
+    o.station.sender_name = "СТО"
+    o.station.save()
+    o.vehicle.model = "GLE"
+    o.vehicle.save()
+    sms = compose_text(o, "sms")
+    assert "и ещё 4 работы" in sms and sms_segments(sms)[0] <= 2, sms
+
+
+def test_second_touch_template(station_a):
+    o = make_outreach(station_a)
+    o.touch_count = 1
+    assert "напоминает" in compose_text(o, "sms")
+    assert "напоминает" in compose_text(o, "max")
 
 
 def test_template_cannot_reach_models(station_a):
-    station_a.settings = {"message_template": "{{ station.organization }}|{{ station.name }}"}
+    station_a.settings = {"sms_template": "{{ station.organization }}|{{ station.name }}"}
     station_a.save()
     o = make_outreach(station_a)
-    assert compose_text(o) == f"|{station_a.name}"
+    assert compose_text(o, "sms") == f"|{station_a.name}"
 
 
 def test_summary_join():
@@ -78,7 +125,7 @@ def test_today_page(client, manager_a, station_a):
     assert resp.status_code == 200
     assert len(resp.context["rows"]) == 1
     assert "«колодки пер. 30%»" in html
-    assert "По пробегу пора проверить" in html
+    assert "СТОП — отписка" in html and "сегм." in html
     phone = resp.context["rows"][0]["o"].client.phone
     assert phone not in html and f"{phone[:4]}***{phone[-2:]}" in html  # masked phone only
 
@@ -93,12 +140,12 @@ def test_approve(client, manager_a, station_a):
     assert AuditEvent.objects.get().action == "outreach.approve"
 
 
-def test_approve_telegram_channel(client, manager_a, station_a):
-    o = make_outreach(station_a, telegram_chat_id=123)
+def test_approve_max_channel(client, manager_a, station_a):
+    o = make_outreach(station_a, max_user_id=123)
     client.force_login(manager_a)
     client.post(reverse("outreach:approve", args=[o.pk]))
     o.refresh_from_db()
-    assert o.channel == "telegram"
+    assert o.channel == "max"
 
 
 def test_approve_obsolete_is_cancelled(client, manager_a, station_a):
@@ -138,7 +185,7 @@ def test_edit_text(client, manager_a, station_a):
     o = make_outreach(station_a)
     client.force_login(manager_a)
     form = client.get(reverse("outreach:edit_text", args=[o.pk])).content.decode()
-    assert "По пробегу пора проверить" in form
+    assert "СТОП — отписка" in form
     resp = client.post(reverse("outreach:edit_text", args=[o.pk]), {"text": "Иван, пора на ТО!"})
     assert "Иван, пора на ТО!" in resp.content.decode() and "(изменён)" in resp.content.decode()
     o.refresh_from_db()

@@ -18,7 +18,9 @@ class Client(TimeStampedModel):
     external_id = models.CharField("ID в системе СТО", max_length=64, null=True, blank=True)  # noqa: DJ001 - NULL needed for conditional unique
     full_name = models.CharField("ФИО", max_length=255, blank=True)
     phone = models.CharField("телефон (E.164)", max_length=20, null=True, blank=True)  # noqa: DJ001
-    telegram_chat_id = models.BigIntegerField(null=True, blank=True)
+    max_user_id = models.BigIntegerField(
+        "ID пользователя в MAX", null=True, blank=True, db_index=True
+    )
     consent_service = models.BooleanField("согласие на сервисные уведомления", default=True)
     consent_marketing = models.BooleanField("согласие на рекламу", default=False)
     unsubscribed_at = models.DateTimeField("отписан", null=True, blank=True)

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.recommendations",
     "apps.llm",
     "apps.outreach",
+    "apps.messaging",
 ]
 
 MIDDLEWARE = [
@@ -134,9 +135,16 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="vozvrat@localhost")
 MESSAGE_BACKEND_SMS = env("MESSAGE_BACKEND_SMS", default="console")
 SMS_API_KEY = env("SMS_API_KEY", default="")
 SMS_SENDER_NAME = env("SMS_SENDER_NAME", default="")
-TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
-TELEGRAM_WEBHOOK_SECRET = env("TELEGRAM_WEBHOOK_SECRET", default="")
-TELEGRAM_BOT_USERNAME = env("TELEGRAM_BOT_USERNAME", default="")
+SMS_INBOUND_SECRET = env("SMS_INBOUND_SECRET", default="")
+SMS_MAX_SEGMENTS = env_number("SMS_MAX_SEGMENTS", 2, int)
+
+# MAX messenger bot (https://dev.max.ru); the API base moved to platform-api2 in 2026
+MESSAGE_BACKEND_MAX = env("MESSAGE_BACKEND_MAX", default="console")  # console | max
+MAX_API_BASE_URL = env("MAX_API_BASE_URL", default="https://platform-api2.max.ru")
+MAX_BOT_TOKEN = env("MAX_BOT_TOKEN", default="")
+MAX_WEBHOOK_SECRET = env("MAX_WEBHOOK_SECRET", default="")
+MAX_BOT_USERNAME = env("MAX_BOT_USERNAME", default="")
+MAX_LINK_TEMPLATE = env("MAX_LINK_TEMPLATE", default="https://max.ru/{bot}?start={payload}")
 
 # --- Logging: PII is scrubbed from every record as a safety net ---
 LOGGING = {
@@ -166,5 +174,10 @@ CELERY_BEAT_SCHEDULE = {
     "build-daily-queues": {
         "task": "apps.outreach.tasks.build_daily_queues_task",
         "schedule": 60 * 60,
+    },
+    # sends approved reminders when the station is inside its send window (10:00–20:00)
+    "dispatch-approved-reminders": {
+        "task": "apps.messaging.tasks.dispatch_due_task",
+        "schedule": 10 * 60,
     },
 }

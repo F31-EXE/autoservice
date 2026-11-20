@@ -203,10 +203,8 @@ class TestSkipReasons:
         assert r.status == "open"  # not scheduled; cooldown prevents daily duplicates
         assert queue(station).get("skipped", 0) == 0
 
-    def test_telegram_only_client_is_contactable(self, station):
-        v = vehicle_for(
-            station, client_phone=None, client_external_id="X", client_telegram_chat_id=5
-        )
+    def test_max_only_client_is_contactable(self, station):
+        v = vehicle_for(station, client_phone=None, client_external_id="X", client_max_user_id=5)
         rec_for(v, due_date=TODAY)
         assert queue(station)["awaiting_approval"] == 1
 

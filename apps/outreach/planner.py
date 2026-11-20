@@ -25,7 +25,7 @@ class SkipReason:
     NO_CONSENT = "Нет согласия на сервисные уведомления"
     SOLD = "Автомобиль продан"
     INACTIVE = "Нет визитов дольше {days} дней"
-    NO_CONTACT = "Нет телефона и Telegram"
+    NO_CONTACT = "Нет телефона и MAX"
     WORK_DONE = "Работы уже выполнены или рекомендации закрыты"
 
 
@@ -88,7 +88,7 @@ def skip_reason_for(vehicle, client, station: ServiceStation, today: date) -> st
     inactive_days = int(conf["inactive_vehicle_days"])
     if vehicle.last_visit_at and (today - vehicle.last_visit_at).days > inactive_days:
         return SkipReason.INACTIVE.format(days=inactive_days)
-    if not client.phone and not client.telegram_chat_id:
+    if not client.phone and not client.max_user_id:
         return SkipReason.NO_CONTACT
     return None
 
@@ -138,6 +138,31 @@ def close_finished_control(station: ServiceStation, today: date) -> int:
     return count
 
 
+def schedule_next_touches(station: ServiceStation, now=None) -> dict[str, int]:
+    """Spec 8.5: no answer after N days → second touch (again via approval); after the
+    limit → no_response."""
+    now = now or timezone.now()
+    conf = station.conf
+    waited = now - timedelta(days=int(conf["second_touch_after_days"]))
+    stats = {"second_touch": 0, "no_response": 0}
+    for outreach in Outreach.objects.filter(
+        station=station, status=Outreach.Status.SENT, last_touch_at__lte=waited
+    ):
+        if outreach.touch_count < int(conf["max_touches"]):
+            outreach.status = Outreach.Status.AWAITING_APPROVAL
+            outreach.custom_text = ""  # the second touch uses its own template
+            outreach.approved_by, outreach.approved_at = None, None
+            outreach.save(update_fields=["status", "custom_text", "approved_by", "approved_at",
+                                         "updated_at"])  # fmt: skip
+            stats["second_touch"] += 1
+        else:
+            outreach.status = Outreach.Status.NO_RESPONSE
+            outreach.save(update_fields=["status", "updated_at"])
+            release_recommendations(outreach)
+            stats["no_response"] += 1
+    return stats
+
+
 # ---------------------------------------------------------------- 7.4 queue
 
 
@@ -150,6 +175,7 @@ def build_queue(station: ServiceStation, today: date | None = None) -> dict[str,
     stats["planned_updated"] = recompute_planned_for(station)
     stats["obsolete_cancelled"] = cancel_obsolete(station)
     stats["control_closed"] = close_finished_control(station, today)
+    stats.update(schedule_next_touches(station))
 
     merge_until = today + timedelta(days=int(conf["merge_window_days"]))
     due_vehicle_ids = set(

@@ -4,7 +4,7 @@
     <div>
       <strong>{{ o.client.full_name|default:"Клиент без имени" }}</strong>
       <span class="muted"> · {{ o.vehicle.make_model|default:"автомобиль" }}{% if o.vehicle.last_known_mileage %} · {{ o.vehicle.last_known_mileage }} км{% endif %}</span>
-      <div class="muted">{% if o.client.telegram_chat_id %}Telegram{% elif o.client.phone %}SMS · {{ o.client.masked_phone }}{% endif %}{% if o.est_amount %} · оценка {{ o.est_amount|floatformat:0 }} ₽{% endif %}</div>
+      <div class="muted">{% if o.client.max_user_id %}MAX{% elif o.client.phone %}SMS · {{ o.client.masked_phone }}{% endif %}{% if o.est_amount %} · оценка {{ o.est_amount|floatformat:0 }} ₽{% endif %}</div>
     </div>
   </header>
   <ul class="recs">
@@ -15,7 +15,8 @@
     </li>
     {% endfor %}
   </ul>
-  <div class="preview"><small class="muted">Текст сообщения{% if o.custom_text %} (изменён){% endif %}:</small><p>{{ text }}</p></div>
+  <div class="preview"><small class="muted">{% if o.touch_count %}Повторное напоминание (касание {{ o.touch_count|add:1 }}). {% endif %}Текст {% if channel == "max" %}в MAX (с кнопками «Записаться», «Уже сделал», «Неактуально»){% else %}SMS · {{ text|length }} симв., {{ segments }} сегм.{% endif %}{% if o.custom_text %} (изменён){% endif %}:</small><p>{{ text }}</p>
+  {% if too_long %}<small class="error">SMS длиннее допустимого — сократите текст.</small>{% endif %}</div>
   <footer class="actions">
     {% if o.needs_call %}
       <button hx-post="{% url 'outreach:call' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">Позвонить</button>

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Диалоги{% endblock %}
+{% block content %}
+<h2>Диалоги · {{ station.name }}</h2>
+<nav class="tabs">
+  <a href="{% url 'messaging:dialogs' %}" {% if not show_all %}aria-current="page"{% endif %}>Требуют внимания</a>
+  <a href="?all=1" {% if show_all %}aria-current="page"{% endif %}>Все</a>
+</nav>
+<table>
+  <thead><tr><th>Клиент</th><th>Последнее сообщение</th><th>Требуют ответа</th></tr></thead>
+  <tbody>
+  {% for c in page %}
+    <tr>
+      <td><a href="{% url 'messaging:conversation' c.pk %}">{{ c.full_name|default:"Клиент без имени" }}</a></td>
+      <td>{{ c.last_at|date:"d.m.Y H:i" }}</td>
+      <td>{% if c.attention %}<span class="badge badge-pending">{{ c.attention }}</span>{% else %}—{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="3" class="muted">{% if show_all %}Переписки пока нет.{% else %}Всё обработано — новых ответов, требующих внимания, нет.{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% include "_pagination.html" %}
+{% endblock %}
