@@ -3,6 +3,9 @@
 {% block title %}Результаты{% endblock %}
 {% block content %}
 <h2>Результаты</h2>
+<nav class="tabs" aria-label="Период">
+  {% for p in presets %}<a href="?from={{ p.from|date:'Y-m-d' }}&to={{ p.to|date:'Y-m-d' }}&station={{ choice }}" {% if p.active %}aria-current="page"{% endif %}>{{ p.label }}</a>{% endfor %}
+</nav>
 <form method="get" class="filters">
   <select name="station" aria-label="Точка">
     <option value="all">Все точки</option>

@@ -20,6 +20,8 @@ ignore = ["S101", "S105", "S106"]
 "apps/catalog/seed_data.py" = ["E501"]
 "tests/catalog/match_cases.py" = ["E501"]
 "tests/golden/make_golden.py" = ["E501"]
+# demo data: data tables, a well-known demo password, non-crypto randomness
+"apps/common/demo.py" = ["E501", "S107", "S311"]
 "config/settings/*" = ["F403", "F405"]
 
 [tool.pytest.ini_options]

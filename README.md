@@ -16,6 +16,19 @@ docker compose exec web python manage.py createsuperuser
 Кабинет — http://localhost:8000/, Django admin — `/admin/` (только суперадмин). Организацию,
 точку и владельца создаёт суперадмин в админке; дальше владелец работает в «Настройках».
 
+### Посмотреть на демо-данных
+
+```bash
+docker compose exec web python manage.py load_demo
+```
+
+Создаёт «Демо-сеть автосервисов» с 80 выдуманными клиентами и прогоняет их через весь
+конвейер: две выгрузки, правила и извлечение, кампанию 25 дней назад, ответы клиентов,
+визиты и атрибуцию, очередь на сегодня. Вход: владелец `demo` / `demo12345` (видит
+«Результаты» и «Настройки»), администратор `manager` / `demo12345`. Внешние сервисы не
+вызываются (LLM — офлайн-эвристика, сообщения — в лог). Повторный запуск пересоздаёт демо,
+`--remove` удаляет; при `DJANGO_DEBUG=False` команда откажется без `--force`.
+
 ## Локальная разработка
 
 ```bash
@@ -37,6 +50,7 @@ ruff check . && ruff format --check .
 | `python manage.py build_queue --station N [--date YYYY-MM-DD]` | Собрать очередь напоминаний вручную |
 | `python manage.py max_setup_webhook --url https://<host>/messaging/max/webhook/` | Подписать бота MAX на вебхук |
 | `python manage.py delete_client_data --client-id N [--yes]` | Удалить все данные клиента по запросу |
+| `python manage.py load_demo [--clients 80] [--remove]` | Демо-данные для показа кабинета |
 
 ## Периодические задачи (Celery beat)
 

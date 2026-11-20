@@ -43,15 +43,33 @@ def _params(request: HttpRequest):
     return stations, choice, selected, date_from, date_to, today
 
 
+def period_presets(today: date) -> list[tuple[str, date, date]]:
+    from datetime import timedelta
+
+    month_start = today.replace(day=1)
+    prev_end = month_start - timedelta(days=1)
+    return [
+        ("Этот месяц", month_start, today),
+        ("Прошлый месяц", prev_end.replace(day=1), prev_end),
+        ("30 дней", today - timedelta(days=29), today),
+        ("90 дней", today - timedelta(days=89), today),
+    ]
+
+
 @login_required
 def results(request: HttpRequest) -> HttpResponse:
     _check_access(request.user)
     stations, choice, selected, date_from, date_to, today = _params(request)
     report = build_report(selected, date_from, date_to, today)
+    presets = [
+        {"label": label, "from": start, "to": end,
+         "active": (start, end) == (date_from, date_to)}
+        for label, start, end in period_presets(today)
+    ]  # fmt: skip
     return render(
         request,
         "reports/results.html",
-        {"report": report, "stations": stations, "choice": choice,
+        {"report": report, "stations": stations, "choice": choice, "presets": presets,
          "query": request.GET.urlencode()},
     )  # fmt: skip
 

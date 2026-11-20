@@ -176,3 +176,15 @@ class TestViews:
         resp = client.get(reverse("reports:results"), params)
         r = resp.context["report"]
         assert r.funnel.sent == 0 and r.money_count == 0
+
+
+def test_period_presets(client, owner_a, station_a):
+    from apps.reports.views import period_presets
+
+    presets = dict((label, (a, b)) for label, a, b in period_presets(date(2026, 3, 15)))
+    assert presets["Этот месяц"] == (date(2026, 3, 1), date(2026, 3, 15))
+    assert presets["Прошлый месяц"] == (date(2026, 2, 1), date(2026, 2, 28))
+    assert presets["30 дней"] == (date(2026, 2, 14), date(2026, 3, 15))
+    client.force_login(owner_a)
+    resp = client.get(reverse("reports:results"))
+    assert [p["label"] for p in resp.context["presets"] if p["active"]] == ["Этот месяц"]
