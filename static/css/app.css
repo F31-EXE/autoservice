@@ -18,3 +18,9 @@ table.preview td, table.preview th { font-size: .8em; white-space: nowrap; }
 .errors { font-size: .9em; }
 small.error, .flash-error { color: #c62828; }
 .inline-form { max-width: 320px; }
+.filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.filters select, .filters button { width: auto; margin: 0; }
+.urgency { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .4rem; }
+.urgency-safety { background: #c62828; }
+.urgency-wear { background: #f9a825; }
+.urgency-comfort { background: #2e7d32; }

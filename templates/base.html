@@ -16,6 +16,7 @@
       <ul class="main-nav">
         <li><a href="{% url 'accounts:today' %}">Сегодня</a></li>
         <li><a href="{% url 'workorders:import_list' %}">Загрузки</a></li>
+        <li><a href="{% url 'recommendations:list' %}">Рекомендации</a></li>
         <li><a href="{% url 'accounts:station_list' %}">Точки</a></li>
         {% if user.is_superadmin %}<li><a href="{% url 'admin:index' %}">Админка</a></li>{% endif %}
       </ul>

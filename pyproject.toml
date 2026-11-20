@@ -17,6 +17,8 @@ ignore = ["S101", "S105", "S106"]
 # data tables are more readable unwrapped
 "tests/fixtures/make_fixtures.py" = ["E501"]
 "apps/workorders/importing/fields.py" = ["E501"]
+"apps/catalog/seed_data.py" = ["E501"]
+"tests/catalog/match_cases.py" = ["E501"]
 "config/settings/*" = ["F403", "F405"]
 
 [tool.pytest.ini_options]

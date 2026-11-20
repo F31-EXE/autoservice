@@ -54,3 +54,29 @@ class VehicleFactory(factory.django.DjangoModelFactory):
     client = factory.SubFactory(ClientFactory)
     make = "Lada"
     model = "Vesta"
+
+
+class WorkOrderFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "workorders.WorkOrder"
+
+    vehicle = factory.SubFactory(VehicleFactory)
+    station = factory.LazyAttribute(lambda o: o.vehicle.client.station)
+    external_number = factory.Sequence(lambda n: f"WO-{n}")
+    opened_at = factory.LazyFunction(lambda: __import__("datetime").date(2024, 1, 15))
+    mileage = 50000
+    status = "closed"
+
+    @factory.lazy_attribute
+    def closed_at(self):
+        return self.opened_at if self.status == "closed" else None
+
+
+class WorkOrderLineFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "workorders.WorkOrderLine"
+
+    work_order = factory.SubFactory(WorkOrderFactory)
+    name = "Замена масла ДВС"
+    kind = "labor"
+    executed = True

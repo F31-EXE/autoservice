@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.customers",
     "apps.workorders",
+    "apps.catalog",
+    "apps.recommendations",
 ]
 
 MIDDLEWARE = [
@@ -144,4 +146,12 @@ LOGGING = {
         },
     },
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", default="INFO")},
+}
+
+# Static periodic tasks (synced into django-celery-beat on start). Times are UTC.
+CELERY_BEAT_SCHEDULE = {
+    "expire-recommendations": {
+        "task": "apps.recommendations.tasks.expire_recommendations_task",
+        "schedule": 60 * 60 * 24,
+    },
 }

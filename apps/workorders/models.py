@@ -162,7 +162,14 @@ class WorkOrderLine(TimeStampedModel):
     price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     executed = models.BooleanField("выполнено", default=True)
-    # work_type FK is added in stage 3 (catalog app)
+    work_type = models.ForeignKey(
+        "catalog.WorkType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="work_order_lines",
+        verbose_name="вид работ",
+    )
 
     objects = WorkOrderLineQuerySet.as_manager()
 
