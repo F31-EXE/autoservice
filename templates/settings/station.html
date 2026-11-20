@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Настройки{% endblock %}
+{% block content %}
+<h2>Настройки · {{ station.name }}</h2>
+<nav class="tabs">
+  <a href="#station">Точка</a><a href="#rules">Правила рассылки</a><a href="#templates">Шаблоны</a><a href="#users">Пользователи</a>
+</nav>
+
+<section id="station">
+  <h3>Точка</h3>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="section" value="station">
+    {{ station_form.non_field_errors }}
+    <div class="grid-form">
+      {% for f in station_form %}
+      <label>{{ f.label }} {{ f }}{% if f.help_text %}<small class="muted">{{ f.help_text }}</small>{% endif %}{% for e in f.errors %}<small class="error">{{ e }}</small>{% endfor %}</label>
+      {% endfor %}
+    </div>
+    <button type="submit">Сохранить</button>
+  </form>
+</section>
+
+<section id="rules">
+  <h3>Правила рассылки</h3>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="section" value="rules">
+    {% if rules_form.non_field_errors %}<p class="error">{% for e in rules_form.non_field_errors %}{{ e }} {% endfor %}</p>{% endif %}
+    <div class="grid-form">
+      {% for f in rules_form %}
+      <label>{{ f.label }} {{ f }}{% if f.help_text %}<small class="muted">{{ f.help_text }}</small>{% endif %}{% for e in f.errors %}<small class="error">{{ e }}</small>{% endfor %}</label>
+      {% endfor %}
+    </div>
+    <button type="submit">Сохранить</button>
+  </form>
+</section>
+
+<section id="templates">
+  <h3>Шаблоны сообщений</h3>
+  <p class="muted">Подстановки: <code>{% templatetag openvariable %} client_first_name {% templatetag closevariable %}</code>, <code>{% templatetag openvariable %} station.sender_name {% templatetag closevariable %}</code>, <code>{% templatetag openvariable %} recommendation_summary {% templatetag closevariable %}</code>, <code>{% templatetag openvariable %} vehicle_make_model {% templatetag closevariable %}</code>, <code>{% templatetag openvariable %} visit_month {% templatetag closevariable %}</code>, <code>{% templatetag openvariable %} link {% templatetag closevariable %}</code>. Если SMS не помещается в 2 сегмента, система сама сократит перечень работ, а затем перейдёт на запасной короткий текст.</p>
+  <div class="grid">
+    <article><small class="muted">Сейчас SMS выглядит так ({{ preview.sms_len }} симв., {{ preview.sms_segments }} сегм.):</small><p>{{ preview.sms }}</p></article>
+    <article><small class="muted">Сообщение в MAX:</small><p>{{ preview.max }}</p></article>
+  </div>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="section" value="templates">
+    {% for f in templates_form %}
+      <label>{{ f.label }} {{ f }}<small class="muted">{{ f.help_text }}</small>{% for e in f.errors %}<small class="error">{{ e }}</small>{% endfor %}</label>
+    {% endfor %}
+    <button type="submit">Сохранить</button>
+  </form>
+</section>
+
+<section id="users">
+  <div class="page-head"><h3>Пользователи</h3><a href="{% url 'accounts:user_create' %}" role="button" class="secondary">Добавить администратора</a></div>
+  <div class="overflow-auto">
+  <table>
+    <thead><tr><th>Логин</th><th>Роль</th><th>Точки</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr{% if not u.is_active %} class="muted"{% endif %}>
+        <td>{{ u.username }}{% if u.get_full_name %}<br><small class="muted">{{ u.get_full_name }}</small>{% endif %}{% if not u.is_active %} <span class="badge">отключён</span>{% endif %}</td>
+        <td>{{ u.get_role_display }}</td>
+        <td>{% if u.is_owner %}все точки{% else %}{% for s in u.stations.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}{% endif %}</td>
+        <td>{% if u.is_manager and u != request.user %}
+          <form method="post" action="{% url 'accounts:user_update' u.pk %}">{% csrf_token %}
+            {% if u.is_active %}<button name="action" value="deactivate" class="contrast outline">Отключить</button>{% else %}<button name="action" value="activate" class="secondary outline">Включить</button>{% endif %}
+          </form>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

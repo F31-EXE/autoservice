@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Клиенты{% endblock %}
+{% block content %}
+<h2>Клиенты · {{ station.name }}</h2>
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="ФИО, телефон, госномер или VIN" aria-label="Поиск">
+  <button type="submit">Найти</button>
+</form>
+<p class="muted">Найдено: {{ page.paginator.count }}</p>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Клиент</th><th>Телефон</th><th>Машины</th><th>Последний визит</th></tr></thead>
+  <tbody>
+  {% for c in page %}
+    <tr>
+      <td><a href="{% url 'customers:detail' c.pk %}">{{ c.full_name|default:"Без имени" }}</a>{% if c.unsubscribed_at %} <span class="badge">отписан</span>{% endif %}</td>
+      <td>{{ c.phone|default:"—" }}</td>
+      <td>{% for v in c.vehicles.all %}{{ v.make_model|default:"—" }}{% if v.plate %} {{ v.plate }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+      <td>{{ c.last_visit|date:"d.m.Y"|default:"—" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="muted">Никого не нашли.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "_pagination.html" %}
+{% endblock %}

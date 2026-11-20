@@ -96,3 +96,23 @@ def _fail(batch: ImportBatch, message: str) -> None:
     batch.finished_at = timezone.now()
     batch.error_log = message
     batch.save(update_fields=["status", "finished_at", "error_log", "updated_at"])
+
+
+@shared_task
+def purge_import_files_task() -> int:
+    """Uploaded exports contain personal data of many clients; keep them only for a while."""
+    from datetime import timedelta
+
+    from django.conf import settings
+
+    cutoff = timezone.now() - timedelta(days=int(settings.IMPORT_FILE_RETENTION_DAYS))
+    purged = 0
+    for batch in ImportBatch.objects.filter(
+        finished_at__lt=cutoff,
+        status__in=(ImportBatch.Status.PARSED, ImportBatch.Status.FAILED),
+    ).exclude(file=""):
+        batch.file.delete(save=False)
+        batch.file = ""
+        batch.save(update_fields=["file", "updated_at"])
+        purged += 1
+    return purged

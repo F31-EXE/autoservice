@@ -2,7 +2,7 @@
   <header class="outreach-head">
     {% if not o.needs_call %}<input type="checkbox" name="ids" value="{{ o.pk }}" form="bulk-form" aria-label="Выбрать">{% endif %}
     <div>
-      <strong>{{ o.client.full_name|default:"Клиент без имени" }}</strong>
+      <strong><a href="{% url 'customers:detail' o.client_id %}">{{ o.client.full_name|default:"Клиент без имени" }}</a></strong>
       <span class="muted"> · {{ o.vehicle.make_model|default:"автомобиль" }}{% if o.vehicle.last_known_mileage %} · {{ o.vehicle.last_known_mileage }} км{% endif %}</span>
       <div class="muted">{% if o.client.max_user_id %}MAX{% elif o.client.phone %}SMS · {{ o.client.masked_phone }}{% endif %}{% if o.est_amount %} · оценка {{ o.est_amount|floatformat:0 }} ₽{% endif %}</div>
     </div>

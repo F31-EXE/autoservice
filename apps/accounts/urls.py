@@ -3,7 +3,7 @@ from django.urls import path
 
 from apps.outreach import views as outreach_views
 
-from . import views
+from . import settings_views, views
 
 app_name = "accounts"
 
@@ -18,4 +18,7 @@ urlpatterns = [
     path("stations/", views.station_list, name="station_list"),
     path("stations/<int:pk>/", views.station_detail, name="station_detail"),
     path("stations/switch/", views.switch_station, name="switch_station"),
+    path("settings/", settings_views.station_settings, name="settings"),
+    path("settings/users/new/", settings_views.user_create, name="user_create"),
+    path("settings/users/<int:pk>/", settings_views.user_update, name="user_update"),
 ]

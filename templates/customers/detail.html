@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ client.full_name|default:"Клиент" }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>{{ client.full_name|default:"Клиент без имени" }}</h2>
+  <a href="{% url 'messaging:conversation' client.pk %}" role="button" class="secondary outline">Переписка</a>
+</div>
+<div class="grid">
+  <article>
+    <small class="muted">Контакты</small>
+    <p>{{ client.phone|default:"телефона нет" }}{% if client.max_user_id %} · MAX подключён{% endif %}{% if client.external_id %}<br><small class="muted">ID в системе СТО: {{ client.external_id }}</small>{% endif %}</p>
+    {% if client.unsubscribed_at %}
+      <p class="note">Отписан {{ client.unsubscribed_at|date:"d.m.Y H:i" }} — сообщения не отправляются.</p>
+      <form method="post" action="{% url 'customers:action' client.pk %}">{% csrf_token %}
+        <label><input type="checkbox" name="confirm" value="yes"> Клиент сам попросил снова присылать сообщения</label>
+        <button name="action" value="resubscribe" class="secondary outline">Восстановить подписку</button>
+      </form>
+    {% else %}
+      <form method="post" action="{% url 'customers:action' client.pk %}">{% csrf_token %}
+        <button name="action" value="unsubscribe" class="contrast outline">Отписать от сообщений</button>
+      </form>
+    {% endif %}
+  </article>
+  <article>
+    <small class="muted">Заметки</small>
+    <form method="post" action="{% url 'customers:action' client.pk %}">{% csrf_token %}
+      <textarea name="notes" rows="3">{{ client.notes }}</textarea>
+      <button name="action" value="notes" class="secondary">Сохранить</button>
+    </form>
+  </article>
+</div>
+
+<h3>Машины</h3>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Машина</th><th>Госномер / VIN</th><th>Последний визит</th><th>Пробег</th><th>км/день</th><th></th></tr></thead>
+  <tbody>
+  {% for v in vehicles %}
+    <tr>
+      <td>{{ v.make_model|default:"—" }}{% if v.year %} {{ v.year }}{% endif %}{% if v.is_sold %} <span class="badge">продана</span>{% endif %}</td>
+      <td>{{ v.plate|default:"—" }}<br><small class="muted">{{ v.vin|default:"" }}</small></td>
+      <td>{{ v.last_visit_at|date:"d.m.Y"|default:"—" }}</td>
+      <td>{{ v.last_known_mileage|default:"—" }}</td>
+      <td>{{ v.km_per_day_estimate|floatformat:0|default:"оценки нет" }}</td>
+      <td><form method="post" action="{% url 'customers:vehicle_sold' v.pk %}">{% csrf_token %}
+        {% if v.is_sold %}<button name="sold" value="0" class="secondary outline">Не продана</button>{% else %}<button name="sold" value="1" class="secondary outline">Продана</button>{% endif %}
+      </form></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h3>Рекомендации</h3>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Работа</th><th>Источник</th><th>Срок</th><th>Оценка, ₽</th><th>Статус</th></tr></thead>
+  <tbody>
+  {% for r in recommendations %}
+    <tr>
+      <td><span class="urgency urgency-{{ r.urgency }}"></span>{{ r.title }}{% if r.source_text and r.source_text != r.title %}<br><small class="muted">«{{ r.source_text|truncatechars:120 }}»</small>{% endif %}</td>
+      <td>{{ r.get_source_display }}<br><small class="muted">ЗН № {{ r.source_work_order.external_number }}, {{ r.vehicle.make_model }}</small></td>
+      <td>{{ r.due_date|date:"d.m.Y"|default:"" }}{% if r.due_km %}<br><small>{{ r.due_km }} км</small>{% endif %}</td>
+      <td>{{ r.est_price|floatformat:0|default:"—" }}</td>
+      <td>{{ r.get_status_display }}{% if r.closed_by_work_order %}<br><small class="muted">ЗН № {{ r.closed_by_work_order.external_number }}</small>{% endif %}</td>
+    </tr>
+  {% empty %}<tr><td colspan="5" class="muted">Рекомендаций нет.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h3>Напоминания</h3>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Дата</th><th>Машина</th><th>Канал</th><th>Касаний</th><th>Статус</th></tr></thead>
+  <tbody>
+  {% for o in outreaches %}
+    <tr><td>{{ o.planned_for|date:"d.m.Y" }}</td><td>{{ o.vehicle.make_model }}</td><td>{{ o.get_channel_display|default:"—" }}</td><td>{{ o.touch_count }}</td>
+      <td>{{ o.get_status_display }}{% if o.is_control_group %} <span class="badge">контроль</span>{% endif %}{% if o.skip_reason %}<br><small class="muted">{{ o.skip_reason }}</small>{% endif %}{% if o.attributed_amount %}<br><small>визит на {{ o.attributed_amount|floatformat:0 }} ₽</small>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="muted">Напоминаний не было.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h3>История заказ-нарядов</h3>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Дата</th><th>№</th><th>Машина</th><th>Пробег</th><th>Работы</th><th>Сумма, ₽</th></tr></thead>
+  <tbody>
+  {% for wo in work_orders %}
+    <tr>
+      <td>{{ wo.opened_at|date:"d.m.Y" }}</td><td>{{ wo.external_number }}{% if wo.status != "closed" %}<br><small class="muted">{{ wo.get_status_display }}</small>{% endif %}</td>
+      <td>{{ wo.vehicle.make_model }}</td><td>{{ wo.mileage|default:"—" }}</td>
+      <td>{% for ln in wo.lines.all %}{% if ln.kind == "labor" %}<div{% if not ln.executed %} class="muted"{% endif %}>{{ ln.name }}{% if not ln.executed %} — отказ{% endif %}</div>{% endif %}{% endfor %}
+        {% if wo.recommendations_text or wo.mechanic_comment %}<small class="muted">{{ wo.recommendations_text }} {{ wo.mechanic_comment }}</small>{% endif %}</td>
+      <td>{{ wo.total_amount|floatformat:0 }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="6" class="muted">Нет заказ-нарядов.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

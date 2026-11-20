@@ -19,7 +19,7 @@
     <tr>
       <td><span class="urgency urgency-{{ r.urgency }}" title="{{ r.get_urgency_display }}"></span>{{ r.title }}
         {% if r.source_text and r.source_text != r.title %}<br><small class="muted">«{{ r.source_text|truncatechars:120 }}»</small>{% endif %}</td>
-      <td>{{ r.vehicle.client.full_name|default:"—" }}<br><small class="muted">{{ r.vehicle.make_model|default:"—" }}</small></td>
+      <td><a href="{% url 'customers:detail' r.vehicle.client_id %}">{{ r.vehicle.client.full_name|default:"—" }}</a><br><small class="muted">{{ r.vehicle.make_model|default:"—" }}</small></td>
       <td>{{ r.get_source_display }}<br><small class="muted">№ {{ r.source_work_order.external_number }} от {{ r.source_work_order.visit_date|date:"d.m.Y" }}</small></td>
       <td>{% if r.due_date %}{{ r.due_date|date:"d.m.Y" }}{% endif %}{% if r.due_km %}<br><small>{{ r.due_km }} км</small>{% endif %}</td>
       <td>{{ r.est_price|default_if_none:"—" }}</td>

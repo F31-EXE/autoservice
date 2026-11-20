@@ -104,6 +104,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "media/"
 MEDIA_ROOT = env.path("MEDIA_ROOT", default=str(BASE_DIR / "media"))
 
+# Uploaded exports hold personal data of many clients: delete files N days after parsing
+IMPORT_FILE_RETENTION_DAYS = env_number("IMPORT_FILE_RETENTION_DAYS", 30, int)
+
 # --- Celery ---
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_BROKER_URL = REDIS_URL
@@ -175,6 +178,10 @@ CELERY_BEAT_SCHEDULE = {
     "build-daily-queues": {
         "task": "apps.outreach.tasks.build_daily_queues_task",
         "schedule": 60 * 60,
+    },
+    "purge-import-files": {
+        "task": "apps.workorders.tasks.purge_import_files_task",
+        "schedule": 60 * 60 * 24,
     },
     # sends approved reminders when the station is inside its send window (10:00–20:00)
     "dispatch-approved-reminders": {
