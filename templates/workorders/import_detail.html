@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Загрузка #{{ batch.pk }}{% endblock %}
+{% block content %}
+<h2>Загрузка «{{ batch.original_filename }}»</h2>
+<p class="muted">{{ batch.get_source_system_display }}{% if batch.mapping_profile %} · профиль «{{ batch.mapping_profile.name }}»{% endif %} · {{ batch.created_at|date:"d.m.Y H:i" }}</p>
+{% include "workorders/_import_status.html" %}
+<p><a href="{% url 'workorders:import_list' %}">← Все загрузки</a></p>
+{% endblock %}

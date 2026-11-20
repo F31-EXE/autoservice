@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Загрузки{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>Загрузки · {{ station.name }}</h2>
+  <a href="{% url 'workorders:import_upload' %}" role="button">Загрузить выгрузку</a>
+</div>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Дата</th><th>Файл</th><th>Источник</th><th>Статус</th><th>ЗН</th><th>Ошибок</th><th>Загрузил</th></tr></thead>
+  <tbody>
+  {% for b in page %}
+    <tr>
+      <td>{{ b.created_at|date:"d.m.Y H:i" }}</td>
+      <td><a href="{% url 'workorders:import_detail' b.pk %}">{{ b.original_filename }}</a></td>
+      <td>{{ b.get_source_system_display }}</td>
+      <td><span class="badge badge-{{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>{{ b.stats.work_orders|default:"—" }}</td>
+      <td>{{ b.stats.errors|default:"—" }}</td>
+      <td>{{ b.uploaded_by.get_username|default:"—" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="muted">Загрузок пока нет.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "_pagination.html" %}
+{% endblock %}

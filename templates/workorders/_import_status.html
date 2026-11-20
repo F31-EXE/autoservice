@@ -1,0 +1,24 @@
+<section id="import-status"
+  {% if batch.is_running %}hx-get="{% url 'workorders:import_detail' batch.pk %}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+  <p>Статус: <span class="badge badge-{{ batch.status }}">{{ batch.get_status_display }}</span>
+  {% if batch.is_running %}<span aria-busy="true">обрабатываем…</span>{% endif %}</p>
+  {% if not batch.mapping_profile and batch.status == "pending" %}
+    <p><a href="{% url 'workorders:import_mapping' batch.pk %}" role="button">Настроить сопоставление колонок</a></p>
+  {% endif %}
+  {% if batch.status == "parsed" %}
+  <div class="stats">
+    <article><small>Строк</small><strong>{{ batch.stats.rows }}</strong></article>
+    <article><small>ЗН в файле</small><strong>{{ batch.stats.work_orders }}</strong></article>
+    <article><small>ЗН новых / обновлено / без изменений</small><strong>{{ batch.stats.work_orders_created }} / {{ batch.stats.work_orders_updated }} / {{ batch.stats.work_orders_unchanged }}</strong></article>
+    <article><small>Новых клиентов</small><strong>{{ batch.stats.clients_created }}</strong></article>
+    <article><small>Новых машин</small><strong>{{ batch.stats.vehicles_created }}</strong></article>
+    <article><small>Ошибок и предупреждений</small><strong>{{ batch.stats.errors }}</strong></article>
+  </div>
+  {% endif %}
+  {% if errors %}
+  <details {% if batch.status == "failed" %}open{% endif %}>
+    <summary>{% if batch.status == "failed" %}Ошибка{% else %}Ошибки и предупреждения ({{ errors|length }}){% endif %}</summary>
+    <ul class="errors">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+</section>

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Сопоставление колонок{% endblock %}
+{% block content %}
+<h2>Сопоставление колонок</h2>
+<p class="muted">Файл «{{ batch.original_filename }}». Укажите, какая колонка файла чему соответствует. Поля со * обязательны; нужен телефон <b>или</b> ID клиента. Профиль сохранится и будет использоваться при следующих загрузках.</p>
+
+{% if sheet_names|length > 1 %}
+<form method="get" class="inline-form">
+  <label>Лист
+    <select name="sheet" onchange="this.form.submit()">
+      {% for s in sheet_names %}<option value="{{ s }}" {% if s == sheet or not sheet and forloop.first %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+  </label>
+</form>
+{% endif %}
+
+<h3>Первые строки файла</h3>
+<div class="overflow-auto">
+<table class="preview">
+  <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in preview %}<tr>{% for v in row %}<td>{{ v|default_if_none:"" }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="sheet_name" value="{{ sheet }}">
+  {% if form.non_field_errors %}<article class="flash flash-error">{% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}</article>{% endif %}
+  <fieldset>
+    <legend>{{ form.layout.label }}</legend>
+    {% for radio in form.layout %}<label>{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}
+  </fieldset>
+  <div class="grid">
+    <label>{{ form.date_format.label }} {{ form.date_format }}</label>
+    <label>{{ form.profile_name.label }} {{ form.profile_name }}</label>
+  </div>
+  <h3>Колонки</h3>
+  <div class="mapping-grid">
+    {% for field in form.column_fields %}
+      <label>{{ field.label }} {{ field }}</label>
+    {% endfor %}
+  </div>
+  <button type="submit">Сохранить и импортировать</button>
+</form>
+{% endblock %}

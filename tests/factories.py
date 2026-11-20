@@ -36,3 +36,21 @@ class UserFactory(factory.django.DjangoModelFactory):
             self.stations.set(extracted)
         if create:
             self.save()
+
+
+class ClientFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "customers.Client"
+
+    station = factory.SubFactory(ServiceStationFactory)
+    full_name = factory.Sequence(lambda n: f"Тестов Клиент {n}")
+    phone = factory.Sequence(lambda n: f"+7900{n:07d}")
+
+
+class VehicleFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "customers.Vehicle"
+
+    client = factory.SubFactory(ClientFactory)
+    make = "Lada"
+    model = "Vesta"

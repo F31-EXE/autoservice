@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Загрузка выгрузки{% endblock %}
+{% block content %}
+<h2>Загрузка выгрузки · {{ station.name }}</h2>
+<article>
+  <p class="muted">Excel (.xlsx) или CSV из АвтоДилера, 1С Альфа-Авто, YCLIENTS и т.п. Повторная загрузка того же периода не создаёт дублей.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label>{{ form.file.label }} {{ form.file }}</label>
+    {% for e in form.file.errors %}<small class="error">{{ e }}</small>{% endfor %}
+    <label>{{ form.source_system.label }} {{ form.source_system }}</label>
+    <label>{{ form.remap }} {{ form.remap.label }}</label>
+    <button type="submit">Загрузить</button>
+  </form>
+</article>
+{% endblock %}

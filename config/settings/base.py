@@ -35,10 +35,13 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "apps.common",
     "apps.accounts",
+    "apps.customers",
+    "apps.workorders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

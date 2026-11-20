@@ -14,6 +14,9 @@ ignore = ["S101", "S105", "S106"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S"]
+# data tables are more readable unwrapped
+"tests/fixtures/make_fixtures.py" = ["E501"]
+"apps/workorders/importing/fields.py" = ["E501"]
 "config/settings/*" = ["F403", "F405"]
 
 [tool.pytest.ini_options]

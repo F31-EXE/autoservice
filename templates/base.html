@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Vozvrat{% endblock %} · Vozvrat</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+  <link rel="stylesheet" href="{% static 'vendor/pico-2.0.6.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
-  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+  <script src="{% static 'vendor/htmx-2.0.4.min.js' %}" defer></script>
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% if user.is_authenticated %}
@@ -15,6 +15,7 @@
       <ul><li><a href="{% url 'accounts:today' %}"><strong>Vozvrat</strong></a></li></ul>
       <ul class="main-nav">
         <li><a href="{% url 'accounts:today' %}">Сегодня</a></li>
+        <li><a href="{% url 'workorders:import_list' %}">Загрузки</a></li>
         <li><a href="{% url 'accounts:station_list' %}">Точки</a></li>
         {% if user.is_superadmin %}<li><a href="{% url 'admin:index' %}">Админка</a></li>{% endif %}
       </ul>
