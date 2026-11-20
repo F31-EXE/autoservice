@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Сегодня{% endblock %}
+{% block content %}
+<h2>Сегодня{% if station %} · {{ station.name }}{% endif %}</h2>
+{% if not station %}
+  <p class="muted">У вас пока нет доступа ни к одной точке. Обратитесь к владельцу СТО.</p>
+{% else %}
+  <section><h3>К отправке</h3><p class="muted">Очередь напоминаний появится после загрузки выгрузки.</p></section>
+  <section><h3>Новые заявки</h3><p class="muted">Нет новых заявок.</p></section>
+  <section><h3>Ответы клиентов</h3><p class="muted">Нет непрочитанных ответов.</p></section>
+{% endif %}
+{% endblock %}

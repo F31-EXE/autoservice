@@ -1,0 +1,63 @@
+x-app: &app
+  build: .
+  env_file: .env
+  environment:
+    DATABASE_URL: postgres://vozvrat:vozvrat@postgres:5432/vozvrat
+    REDIS_URL: redis://redis:6379/0
+    DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-config.settings.dev}
+  volumes:
+    - media:/app/media
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  migrate:
+    <<: *app
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
+
+  web:
+    <<: *app
+    depends_on: &after_migrate
+      migrate:
+        condition: service_completed_successfully
+    command: ["/app/docker/entrypoint-web.sh"]
+    ports:
+      - "8000:8000"
+
+  worker:
+    <<: *app
+    depends_on: *after_migrate
+    command: ["celery", "-A", "config", "worker", "-l", "info", "--concurrency", "4"]
+
+  beat:
+    <<: *app
+    depends_on: *after_migrate
+    command: ["celery", "-A", "config", "beat", "-l", "info"]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: vozvrat
+      POSTGRES_USER: vozvrat
+      POSTGRES_PASSWORD: vozvrat
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vozvrat"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  media:

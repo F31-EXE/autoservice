@@ -1,0 +1,49 @@
+{% load static %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Vozvrat{% endblock %} · Vozvrat</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  {% if user.is_authenticated %}
+  <header class="container">
+    <nav>
+      <ul><li><a href="{% url 'accounts:today' %}"><strong>Vozvrat</strong></a></li></ul>
+      <ul class="main-nav">
+        <li><a href="{% url 'accounts:today' %}">Сегодня</a></li>
+        <li><a href="{% url 'accounts:station_list' %}">Точки</a></li>
+        {% if user.is_superadmin %}<li><a href="{% url 'admin:index' %}">Админка</a></li>{% endif %}
+      </ul>
+      <ul>
+        {% if user_stations|length > 1 %}
+        <li>
+          <form method="post" action="{% url 'accounts:switch_station' %}" class="station-switch">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <select name="station_id" onchange="this.form.submit()" aria-label="Точка">
+              {% for s in user_stations %}
+              <option value="{{ s.pk }}" {% if current_station and s.pk == current_station.pk %}selected{% endif %}>{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </li>
+        {% elif current_station %}<li>{{ current_station.name }}</li>{% endif %}
+        <li>
+          <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+            <button type="submit" class="secondary outline">Выйти</button>
+          </form>
+        </li>
+      </ul>
+    </nav>
+  </header>
+  {% endif %}
+  <main class="container">
+    {% for message in messages %}<article class="flash flash-{{ message.tags }}">{{ message }}</article>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

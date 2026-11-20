@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ station.name }}{% endblock %}
+{% block content %}
+<h2>{{ station.name }}</h2>
+<dl>
+  <dt>Организация</dt><dd>{{ station.organization.name }}</dd>
+  <dt>Город</dt><dd>{{ station.city|default:"—" }}</dd>
+  <dt>Часовой пояс</dt><dd>{{ station.timezone }}</dd>
+  <dt>Подпись в сообщениях</dt><dd>{{ station.sender_name|default:"—" }}</dd>
+</dl>
+{% endblock %}
