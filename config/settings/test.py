@@ -11,6 +11,9 @@ CELERY_RESULT_BACKEND = "cache+memory://"
 MESSAGE_BACKEND_SMS = "console"
 # Real external APIs must never be reached from tests.
 LLM_API_KEY = ""
+LLM_BACKEND = "fake"
+LLM_LOG_PAYLOADS = False
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 TELEGRAM_BOT_TOKEN = ""
 SMS_API_KEY = ""
 MEDIA_ROOT = BASE_DIR / ".test-media"

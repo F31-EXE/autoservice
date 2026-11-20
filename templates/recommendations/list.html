@@ -2,6 +2,7 @@
 {% block title %}Рекомендации{% endblock %}
 {% block content %}
 <h2>Рекомендации · {{ station.name }}</h2>
+{% include "recommendations/_tabs.html" with tab="all" %}
 <form method="get" class="filters">
   <select name="status" aria-label="Статус">{% for k, label in status_filters %}<option value="{{ k }}" {% if k == status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
   <select name="urgency" aria-label="Срочность"><option value="">Любая срочность</option>{% for k, label in urgencies %}<option value="{{ k }}" {% if k == urgency %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>

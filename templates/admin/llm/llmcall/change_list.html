@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+{% block content %}
+<div class="module" style="margin-bottom: 1.5em;">
+  <h2>Расход LLM за текущий месяц по СТО</h2>
+  <table>
+    <thead><tr><th>СТО</th><th>Вызовов</th><th>Расход, ₽</th></tr></thead>
+    <tbody>
+    {% for row in month_spend %}
+      <tr><td>{{ row.station__name|default:"(без СТО — eval)" }}</td><td>{{ row.calls }}</td><td>{{ row.cost|floatformat:2 }}</td></tr>
+    {% empty %}
+      <tr><td colspan="3">Вызовов в этом месяце нет.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ block.super }}
+{% endblock %}

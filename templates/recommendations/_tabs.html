@@ -1,0 +1,4 @@
+<nav class="tabs">
+  <a href="{% url 'recommendations:list' %}" {% if tab == "all" %}aria-current="page"{% endif %}>Все рекомендации</a>
+  <a href="{% url 'recommendations:review' %}" {% if tab == "review" %}aria-current="page"{% endif %}>На проверке{% if review_count %} <span class="badge">{{ review_count }}</span>{% endif %}</a>
+</nav>

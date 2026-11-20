@@ -1,0 +1,4 @@
+<article class="review-item done" id="rec-{{ rec.pk }}">
+  <strong>{{ rec.title }}</strong> —
+  {% if action == "reject" %}отклонена{% elif action == "edit" %}исправлена и подтверждена{% else %}подтверждена{% endif %}.
+</article>

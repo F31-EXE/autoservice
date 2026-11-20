@@ -1,0 +1,23 @@
+<article class="review-item" id="rec-{{ rec.pk }}">
+  <header>
+    <strong>{{ rec.title|default:"(без названия)" }}</strong>
+    <span class="muted"> · {{ rec.get_source_display }} · уверенность {{ rec.confidence|floatformat:2 }}</span>
+    <div class="muted">{{ rec.vehicle.client.full_name|default:"—" }} · {{ rec.vehicle.make_model|default:"—" }} · ЗН № {{ rec.source_work_order.external_number }} от {{ rec.source_work_order.visit_date|date:"d.m.Y" }}{% if rec.source_work_order.mileage %}, {{ rec.source_work_order.mileage }} км{% endif %}</div>
+  </header>
+  <blockquote>«{{ rec.source_text }}»</blockquote>
+  <form hx-post="{% url 'recommendations:review_action' rec.pk %}" hx-target="#rec-{{ rec.pk }}" hx-swap="outerHTML">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="error">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</p>{% endif %}
+    <div class="grid">
+      <label>{{ form.work_type.label }} {{ form.work_type }}</label>
+      <label>{{ form.urgency.label }} {{ form.urgency }}</label>
+      <label>{{ form.due_date.label }} {{ form.due_date }}</label>
+      <label>{{ form.due_km.label }} {{ form.due_km }}</label>
+    </div>
+    <div class="actions">
+      <button type="submit" name="action" value="approve">Подтвердить</button>
+      <button type="submit" name="action" value="edit" class="secondary">Сохранить исправления</button>
+      <button type="submit" name="action" value="reject" class="contrast outline">Отклонить</button>
+    </div>
+  </form>
+</article>

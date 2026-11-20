@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}На проверке{% endblock %}
+{% block content %}
+<h2>Рекомендации · {{ station.name }}</h2>
+{% include "recommendations/_tabs.html" with tab="review" review_count=page.paginator.count %}
+<p class="muted">Рекомендации, которые система нашла в тексте мастера, но не уверена в них, или работы, которых нет в справочнике. Проверьте по цитате и подтвердите, исправьте или отклоните.</p>
+{% for rec, form in items %}
+  {% include "recommendations/_review_item.html" %}
+{% empty %}
+  <p class="muted">Нет рекомендаций на проверке.</p>
+{% endfor %}
+{% include "_pagination.html" %}
+{% endblock %}

@@ -6,20 +6,13 @@ This is a safety net: code must not log PII in the first place.
 import logging
 import re
 
+from . import pii
+
 _PATTERNS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "<email>"),
-    # VIN: 17 chars, no I/O/Q
-    (re.compile(r"\b[A-HJ-NPR-Z0-9]{17}\b", re.IGNORECASE), "<vin>"),
-    # Russian phone numbers in common notations
-    (re.compile(r"(?:\+7|\b8)[\s\-()]*\d{3}[\s\-()]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}\b"), "<phone>"),
-    # Russian plates (Cyrillic or look-alike Latin letters): А123ВС77 / A123BC777
-    (
-        re.compile(
-            r"\b[АВЕКМНОРСТУХABEKMHOPCTYX]\s?\d{3}\s?[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s?\d{2,3}\b",
-            re.IGNORECASE,
-        ),
-        "<plate>",
-    ),
+    (pii.EMAIL, "<email>"),
+    (pii.VIN, "<vin>"),
+    (pii.PHONE, "<phone>"),
+    (pii.PLATE, "<plate>"),
 ]
 
 

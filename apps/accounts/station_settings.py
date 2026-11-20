@@ -14,6 +14,8 @@ DEFAULT_STATION_SETTINGS: dict[str, Any] = {
     "high_value_call_threshold": 15000,
     "recommendation_ttl_days": 540,
     "llm_compose_enabled": False,
+    # LLM extraction skips work orders older than this (None = recommendation_ttl_days)
+    "llm_extract_max_age_days": None,
 }
 
 

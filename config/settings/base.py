@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "apps.workorders",
     "apps.catalog",
     "apps.recommendations",
+    "apps.llm",
 ]
 
 MIDDLEWARE = [
@@ -121,6 +122,12 @@ LLM_PRICE_PER_1K_OUTPUT_RUB = env_number("LLM_PRICE_PER_1K_OUTPUT_RUB", 0.0)
 LLM_MONTHLY_BUDGET_RUB = env_number("LLM_MONTHLY_BUDGET_RUB", 3000.0)
 LLM_CONCURRENCY = env_number("LLM_CONCURRENCY", 4, int)
 LLM_LOG_PAYLOADS = env("LLM_LOG_PAYLOADS")
+LLM_BACKEND = env("LLM_BACKEND", default="openai")  # openai | fake
+LLM_TIMEOUT_SECONDS = env_number("LLM_TIMEOUT_SECONDS", 60.0)
+LLM_EXTRACT_BATCH_SIZE = env_number("LLM_EXTRACT_BATCH_SIZE", 40, int)
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="vozvrat@localhost")
 
 # --- Messaging ---
 MESSAGE_BACKEND_SMS = env("MESSAGE_BACKEND_SMS", default="console")

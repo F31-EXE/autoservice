@@ -24,3 +24,11 @@ small.error, .flash-error { color: #c62828; }
 .urgency-safety { background: #c62828; }
 .urgency-wear { background: #f9a825; }
 .urgency-comfort { background: #2e7d32; }
+.tabs { display: flex; justify-content: flex-start; gap: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--pico-muted-border-color); }
+.tabs a { padding: .5rem 0; text-decoration: none; }
+.tabs a[aria-current="page"] { border-bottom: 2px solid var(--pico-primary); font-weight: 600; }
+.review-item blockquote { margin: .5rem 0; }
+.review-item .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.review-item .actions button { width: auto; }
+.review-item.done { color: var(--pico-muted-color); }
+p.error { color: #c62828; }
