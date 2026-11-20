@@ -1,12 +1,14 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
+from apps.outreach import views as outreach_views
+
 from . import views
 
 app_name = "accounts"
 
 urlpatterns = [
-    path("", views.today, name="today"),
+    path("", outreach_views.today, name="today"),
     path(
         "login/",
         auth_views.LoginView.as_view(template_name="accounts/login.html"),

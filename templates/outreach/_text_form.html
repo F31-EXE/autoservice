@@ -1,0 +1,12 @@
+<article class="outreach" id="outreach-{{ o.pk }}">
+  <strong>{{ o.client.full_name|default:"Клиент" }}</strong> · изменить текст сообщения
+  <form hx-post="{% url 'outreach:edit_text' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">
+    {% csrf_token %}
+    {{ form.text }}
+    <small class="muted" id="len-{{ o.pk }}"></small>
+    <div class="actions">
+      <button type="submit">Сохранить</button>
+      <button type="button" class="secondary outline" hx-get="{% url 'outreach:row' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">Отмена</button>
+    </div>
+  </form>
+</article>

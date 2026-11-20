@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.recommendations",
     "apps.llm",
+    "apps.outreach",
 ]
 
 MIDDLEWARE = [
@@ -160,5 +161,10 @@ CELERY_BEAT_SCHEDULE = {
     "expire-recommendations": {
         "task": "apps.recommendations.tasks.expire_recommendations_task",
         "schedule": 60 * 60 * 24,
+    },
+    # runs hourly; builds each station's queue once a day after 07:00 local time (spec 7.4)
+    "build-daily-queues": {
+        "task": "apps.outreach.tasks.build_daily_queues_task",
+        "schedule": 60 * 60,
     },
 }

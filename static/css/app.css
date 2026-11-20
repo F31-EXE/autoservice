@@ -32,3 +32,16 @@ small.error, .flash-error { color: #c62828; }
 .review-item .actions button { width: auto; }
 .review-item.done { color: var(--pico-muted-color); }
 p.error { color: #c62828; }
+.outreach { padding: 1rem; }
+.outreach-head { display: flex; gap: .75rem; align-items: flex-start; }
+.outreach-head input[type=checkbox] { margin-top: .3rem; }
+.outreach .recs { margin: .5rem 0; }
+.outreach .preview p { background: var(--pico-secondary-background); color: var(--pico-secondary-inverse); padding: .5rem .75rem; border-radius: .5rem; margin: .25rem 0 .5rem; }
+.outreach .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.outreach .actions button { width: auto; margin: 0; }
+.skip-form { display: flex; gap: .5rem; margin: 0; }
+.skip-form input { margin: 0; min-width: 12rem; }
+.outreach.done { color: var(--pico-muted-color); }
+.outreach .script { white-space: pre-wrap; font-size: .9em; }
+.bulk-bar { display: flex; gap: 1rem; align-items: center; margin-bottom: .75rem; }
+.bulk-bar button { width: auto; margin: 0; }

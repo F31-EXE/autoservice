@@ -1,0 +1,9 @@
+<article class="outreach done" id="outreach-{{ o.pk }}">
+  <strong>{{ o.client.full_name|default:"Клиент" }}</strong> —
+  {% if result == "approved" %}одобрено к отправке{% if o.channel == "telegram" %} в Telegram{% else %} по SMS{% endif %}.
+  {% elif result == "call" %}задача на звонок создана. Скрипт звонка:
+    <pre class="script">{{ script }}</pre>
+  {% elif result == "skipped" %}пропущено.
+  {% elif result == "cancelled" %}отменено: работы уже выполнены.
+  {% endif %}
+</article>

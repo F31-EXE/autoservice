@@ -285,6 +285,9 @@ def save_extraction(
 
     wo.extraction_status = WorkOrder.ExtractionStatus.DONE
     wo.save(update_fields=["extraction_status", "updated_at"])
+    from apps.outreach.planner import recompute_planned_for
+
+    recompute_planned_for(wo.station, [wo.vehicle_id])
     return created
 
 

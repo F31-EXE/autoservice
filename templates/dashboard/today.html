@@ -1,12 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Сегодня{% endblock %}
 {% block content %}
-<h2>Сегодня{% if station %} · {{ station.name }}{% endif %}</h2>
+<div class="page-head">
+  <h2>Сегодня{% if station %} · {{ station.name }}{% endif %}</h2>
+  {% if station %}
+  <form method="post" action="{% url 'outreach:rebuild' %}">{% csrf_token %}
+    <button type="submit" class="secondary outline">Обновить очередь</button>
+  </form>
+  {% endif %}
+</div>
 {% if not station %}
   <p class="muted">У вас пока нет доступа ни к одной точке. Обратитесь к владельцу СТО.</p>
 {% else %}
-  <section><h3>К отправке</h3><p class="muted">Очередь напоминаний появится после загрузки выгрузки.</p></section>
-  <section><h3>Новые заявки</h3><p class="muted">Нет новых заявок.</p></section>
-  <section><h3>Ответы клиентов</h3><p class="muted">Нет непрочитанных ответов.</p></section>
+<section>
+  <h3>К отправке <span class="muted">({{ page.paginator.count }})</span></h3>
+  <p class="muted">Сегодня: одобрено {{ approved_today }}, пропущено {{ skipped_today }}, в контрольной группе {{ control_today }} (им не пишем — это нужно для оценки эффекта).</p>
+  {% if rows %}
+  <form method="post" action="{% url 'outreach:bulk_approve' %}" id="bulk-form">{% csrf_token %}</form>
+  <div class="bulk-bar">
+    <label><input type="checkbox" onclick="document.querySelectorAll('input[name=ids]').forEach(c => c.checked = this.checked)"> Выбрать все</label>
+    <button type="submit" form="bulk-form">Отправить выбранные</button>
+  </div>
+  {% for row in rows %}{% include "outreach/_row.html" with o=row.o text=row.text %}{% endfor %}
+  {% include "_pagination.html" %}
+  {% else %}
+  <p class="muted">Нет напоминаний к подтверждению. Очередь формируется каждый день в 07:00 по времени точки; после загрузки новой выгрузки можно нажать «Обновить очередь».</p>
+  {% endif %}
+</section>
+<section><h3>Новые заявки</h3><p class="muted">Нет новых заявок.</p></section>
+<section><h3>Ответы клиентов</h3><p class="muted">Нет непрочитанных ответов.</p></section>
 {% endif %}
 {% endblock %}

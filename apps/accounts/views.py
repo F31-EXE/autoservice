@@ -4,13 +4,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .context import SESSION_KEY, get_current_station
+from .context import SESSION_KEY
 from .models import ServiceStation
-
-
-@login_required
-def today(request: HttpRequest) -> HttpResponse:
-    return render(request, "dashboard/today.html", {"station": get_current_station(request)})
 
 
 @login_required

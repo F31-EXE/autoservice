@@ -75,6 +75,8 @@ class Recommendation(TimeStampedModel):
         related_name="closed_recommendations",
     )
     extractor_version = models.CharField(max_length=128, blank=True)
+    # when to remind (spec 7.2): expected due date minus remind_before_days
+    planned_for = models.DateField("напомнить", null=True, blank=True, db_index=True)
 
     objects = RecommendationQuerySet.as_manager()
 

@@ -1,0 +1,32 @@
+<article class="outreach" id="outreach-{{ o.pk }}">
+  <header class="outreach-head">
+    {% if not o.needs_call %}<input type="checkbox" name="ids" value="{{ o.pk }}" form="bulk-form" aria-label="Выбрать">{% endif %}
+    <div>
+      <strong>{{ o.client.full_name|default:"Клиент без имени" }}</strong>
+      <span class="muted"> · {{ o.vehicle.make_model|default:"автомобиль" }}{% if o.vehicle.last_known_mileage %} · {{ o.vehicle.last_known_mileage }} км{% endif %}</span>
+      <div class="muted">{% if o.client.telegram_chat_id %}Telegram{% elif o.client.phone %}SMS · {{ o.client.masked_phone }}{% endif %}{% if o.est_amount %} · оценка {{ o.est_amount|floatformat:0 }} ₽{% endif %}</div>
+    </div>
+  </header>
+  <ul class="recs">
+    {% for r in o.recommendations.all %}
+    <li><span class="urgency urgency-{{ r.urgency }}"></span>{{ r.title }}
+      <span class="muted">— срок {% if r.due_date %}{{ r.due_date|date:"d.m.Y" }}{% endif %}{% if r.due_date and r.due_km %} / {% endif %}{% if r.due_km %}{{ r.due_km }} км{% endif %}</span>
+      {% if r.source_text and r.source_text != r.title %}<br><small class="muted">«{{ r.source_text|truncatechars:140 }}»</small>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="preview"><small class="muted">Текст сообщения{% if o.custom_text %} (изменён){% endif %}:</small><p>{{ text }}</p></div>
+  <footer class="actions">
+    {% if o.needs_call %}
+      <button hx-post="{% url 'outreach:call' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">Позвонить</button>
+      <small class="muted">сумма выше {{ o.station.conf.high_value_call_threshold }} ₽ — лучше позвонить</small>
+    {% else %}
+      <button hx-post="{% url 'outreach:approve' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">Отправить</button>
+    {% endif %}
+    <button class="secondary outline" hx-get="{% url 'outreach:edit_text' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">Изменить текст</button>
+    <form class="skip-form" hx-post="{% url 'outreach:skip' o.pk %}" hx-target="#outreach-{{ o.pk }}" hx-swap="outerHTML">
+      <input type="text" name="reason" placeholder="Причина пропуска" required {% if skip_error %}aria-invalid="true"{% endif %}>
+      <button type="submit" class="contrast outline">Пропустить</button>
+    </form>
+  </footer>
+</article>

@@ -118,6 +118,9 @@ def review_action(request: HttpRequest, pk: int) -> HttpResponse:
     rec.review_decision_by = request.user
     rec.review_decision_at = timezone.now()
     rec.save()
+    from apps.outreach.planner import recompute_planned_for
+
+    recompute_planned_for(rec.station, [rec.vehicle_id])
     after = _snapshot(rec)
     audit(request.user, f"recommendation.{action}", rec, station=rec.station,
           before=before, after=after)  # fmt: skip

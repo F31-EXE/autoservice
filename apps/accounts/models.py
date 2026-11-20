@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.utils import timezone
 
 from apps.common.models import TimeStampedModel
 from apps.common.tenancy import TenantQuerySet
@@ -65,6 +68,16 @@ class ServiceStation(TimeStampedModel):
     def conf(self) -> dict[str, Any]:
         """Station settings merged with defaults from spec 7.3."""
         return merged_settings(self.settings)
+
+    @property
+    def tz(self) -> ZoneInfo:
+        return ZoneInfo(self.timezone or "Asia/Yekaterinburg")
+
+    def local_now(self) -> datetime:
+        return timezone.now().astimezone(self.tz)
+
+    def local_today(self) -> date:
+        return self.local_now().date()
 
 
 class Role(models.TextChoices):
